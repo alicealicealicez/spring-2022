@@ -1,0 +1,94 @@
+<html>
+    <head>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    </head>
+
+    <body>
+    
+        <h2>
+        Target Scores Histogram
+        </h2>
+            Enter a miRNA name:<input type="text" id="miRNA_name">
+            <br><br>
+            
+            <button>Target scores histogram
+            
+            <div id="chart1_div"></div>
+            
+            <script>
+                $(document).ready(function(){
+                
+                    $(":button").click(function(){
+                    
+                         let miRNA_name=$("#miRNA_name").val();
+                         
+                         $.get("https://bioed.bu.edu/cgi-bin/gbenson/miRNAs_target_gene.py",
+                            {miRNA_name:miRNA_name},
+                            function(data){
+                                create_table(data);
+                            },
+                            "json"
+                        );
+                    });
+                });
+
+                    
+            
+        <h2>
+        miRNA Sequence Search
+        </h2>
+            Enter RNA search sequence:<input type="text" id="search_seq">
+            
+            <button>Find miRNAs
+            
+            <div id="chart2_div"></div>
+            
+    </body>
+</html>
+
+
+
+
+
+ //this function constructs the html table for the results
+ function create_table(data){
+ //gene name to insert in table column header
+ let gene_name = $("#gene_name").val()
+
+ //initiate table body and miRNA name
+ let table_body_contents = "";
+ let miRNA_name = "";
+
+ //clear out the contents of the miRNA_table div
+ $("#miRNA_table").empty();
+
+ //if data is returned from the AJAX call, build a new table
+ if (data!=""){
+
+ //loop through rows of the data
+ for (let row= 0; row<data.length; row++) {
+
+ //miRNA name is the first element of each row
+ miRNA_name = data[row];
+BF768_Lab 21 AJAX Introduction http://localhost:8888/nbconvert/html/BF768_Lab%2021%20AJAX%20Introduction.ipynb?do...
+11 of 14 4/12/22, 12:38 PM
+
+ //construct the table data rows
+ //for string substitution with ${variable name}, use back ticks, not sin
+gle or double quotes
+ table_body_contents += `<tr><td> ${miRNA_name}</td></tr>`;
+ }
+
+ //build the entire table template and susbstitute in the table data rows and
+the gene name
+ let table_template = `<table><thead><tr><th>miRNAs that target ${gene_nam
+e}</th></tr></thead><tbody>${table_body_contents}</tbody></table>`;
+
+ //put the final table in the miRNA_table div
+ $("#miRNA_table").append(table_template);
+ }
+ }
+
+ </script>

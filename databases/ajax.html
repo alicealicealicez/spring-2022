@@ -1,0 +1,166 @@
+<html>
+    <head>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    </head>
+
+    <body>
+    
+        <h2>
+        Target Scores Histogram
+        </h2>
+        Enter a miRNA name (example: hsa-miR-143, hsa-miR-143):<input type="text" id="miRNA_name">
+        <br><br>
+            
+        <button id="button_1">Target scores histogram</button>
+            
+        <div id="chart_div"></div>
+        
+        <h2>
+        miRNA Sequence Search
+        </h2>
+        Enter RNA search sequence between 3 to 8 characters consisting of AUCG:<input type="text" id="search_seq">
+        <br><br>
+
+        <button id="button_2">Find miRNAs</button>
+            
+        <div id="miRNA_table"></div>
+            
+        <script>
+            $(document).ready(function(){
+                
+                $("#button_1").click(function(){
+                	$("#chart_div").empty();
+
+                    let miRNA_name=$("#miRNA_name").val();
+                    
+                    if (miRNA_name == ""){
+                    	temp = "Please enter an miRNA name";
+                    	$("#chart_div").append(temp);
+                    }
+                    
+                    else {
+						$.get("https://bioed.bu.edu/cgi-bin/students_22/ajzheng/alicezheng_AJAX.py",
+							{miRNA_name:miRNA_name},
+							function(data){
+								create_chart(data);
+							},
+							"json"
+						);
+                    }
+                    
+                });
+                $("#button_2").click(function(){
+                	$("#miRNA_table").empty();
+
+                    let search_seq=$("#search_seq").val();
+                    
+                    count = 0
+                    seq = ['A', 'a', 'c', 'C', 'g', 'G','U','u']
+                    for (let char of search_seq){
+                    	if (seq.includes(char)){
+                    	count++
+                    	}
+                    }
+                    if (count != search_seq.length){
+                    	temp = "There is a non AUCG character in your sequence";
+                    	$("#miRNA_table").append(temp);
+                    }
+                    else{
+                    if (search_seq == ""){
+                    	temp = "Please enter a sequence";
+                    	$("#miRNA_table").append(temp);
+                    }
+                    
+                    else if (search_seq.length < 3){
+                    	temp = "Please enter a sequence greater than 3";
+                    	$("#miRNA_table").append(temp);
+                    }
+                    
+                    else if (search_seq.length >= 9){
+                    	temp = "Please enter a sequence less than 9";
+                    	$("#miRNA_table").append(temp);
+                    }
+                    
+                    else{   
+                    $.get("https://bioed.bu.edu/cgi-bin/students_22/ajzheng/alicezheng_AJAX.py",
+                        {search_seq:search_seq},
+                        function(data){
+                            create_table(data);
+                        },
+                        "json"
+                    );
+                    }}
+                });
+            });
+            
+            
+            function create_chart(data){
+            	let miRNA_name = $("#miRNA_name").val()
+                
+                plot_data = [['genes','scores']]
+
+                for (let row = 0; row<data.length;row++){
+                    plot_data.push([data[row][0],data[row][1]])
+                }
+                    
+                google.charts.load("current", {packages:["corechart"]});
+                
+                if(plot_data.length>1){
+                
+                google.charts.setOnLoadCallback(function(){
+                    drawChart(plot_data);
+                })
+                }
+                else{
+                	temp = "There are no targeting scores for this miRNA name";
+                    $("#chart_div").append(temp);
+                }
+                
+                function drawChart(plot_data){
+                    
+                var data = google.visualization.arrayToDataTable(plot_data);
+
+                var options = {'title':"miRNA target scores for "+miRNA_name
+                              };
+
+                var chart = new google.visualization.Histogram(document.getElementById('chart_div'));
+                
+                chart.draw(data, options);        
+            	}
+            }
+                
+
+            
+            
+            function create_table(data){
+                
+                let search_seq = $("#search_seq").val()
+                
+                let table_body_contents = "";
+                
+                let miRNA_name = "";
+                
+                $("#miRNA_table").empty();
+                
+                if (data !=""){
+                    for (let row = 0; row<data.length;row++){
+                        miRNA_name = data[row][0];
+                        miRNA_seq = data[row][1];
+                        
+                        table_body_contents += `<tr><td> ${miRNA_name}</td><td> ${miRNA_seq}</td></tr>`;
+                    }
+                    let table_template = `<table><thead><tr><th>miRNAs that contain ${search_seq}</th></tr></thead><tbody>${table_body_contents}</tbody></table>`;
+
+                $("#miRNA_table").append(table_template);
+                }
+                else{
+                	temp = "There is no matching miRNA sequence for your search sequence";
+                    $("#miRNA_table").append(temp);
+                }
+             }
+        </script>
+
+            
+    </body>
+</html>
